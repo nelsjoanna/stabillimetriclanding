@@ -37,7 +37,7 @@ const features = [
   {
     icon: LineChart,
     title: "Real-time Stability Predictions",
-    description: "Machine learning models forecast shelf-life and stability across temperature and humidity conditions.",
+    description: "Advanced models forecast shelf-life and stability across temperature and humidity conditions.",
     href: "#",
   },
   {

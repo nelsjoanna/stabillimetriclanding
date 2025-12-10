@@ -13,6 +13,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Star, Zap, HeadphonesIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 const earlyAccessPerks = [
   { icon: Star, text: "Founding member pricing" },
@@ -26,7 +28,6 @@ interface WaitlistSectionProps {
 
 export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -36,20 +37,38 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
     isPilotPartner: false,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const waitlistMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const response = await apiRequest("POST", "/api/waitlist", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      setIsSubmitted(true);
+      toast({
+        title: "You're on the list!",
+        description: "We'll be in touch soon with early access details.",
+      });
+    },
+    onError: (error: Error) => {
+      if (error.message.includes("409")) {
+        toast({
+          title: "Already signed up",
+          description: "This email is already on our waitlist.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Something went wrong",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
-    // todo: remove mock functionality
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    console.log("Waitlist signup:", formData);
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    toast({
-      title: "You're on the list!",
-      description: "We'll be in touch soon with early access details.",
-    });
+    waitlistMutation.mutate(formData);
   };
 
   if (isSubmitted) {
@@ -183,10 +202,10 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
                   type="submit"
                   size="lg"
                   className="w-full"
-                  disabled={isSubmitting}
+                  disabled={waitlistMutation.isPending}
                   data-testid="button-submit-waitlist"
                 >
-                  {isSubmitting ? "Joining..." : "Get Early Access"}
+                  {waitlistMutation.isPending ? "Joining..." : "Get Early Access"}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
