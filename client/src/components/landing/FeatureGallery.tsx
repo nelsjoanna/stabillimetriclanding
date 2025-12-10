@@ -13,7 +13,7 @@ const features = [
   {
     icon: Beaker,
     title: "Predictive Compatibility Testing",
-    description: "AI-powered analysis predicts ingredient interactions and stability issues before you even mix a batch.",
+    description: "Advanced analysis predicts ingredient interactions and stability issues before you even mix a batch.",
     href: "#",
   },
   {

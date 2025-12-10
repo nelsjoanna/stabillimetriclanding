@@ -3,12 +3,12 @@ import labSetting from "@assets/generated_images/beauty_lab_formulation_setting.
 
 const benefits = [
   {
-    stat: "90%",
-    statLabel: "Faster Formulation",
+    stat: "40%",
+    statLabel: "Faster Time-to-Market",
     headline: "Accelerate Development Cycles",
-    description: "Cut months off your product development timeline with AI-powered predictions that eliminate guesswork and reduce costly trial-and-error iterations.",
+    description: "Cut months off your product development timeline with predictive analytics that eliminate guesswork and reduce costly trial-and-error iterations.",
     image: aiVisualization,
-    imageAlt: "AI visualization of ingredient compatibility",
+    imageAlt: "Visualization of ingredient compatibility analysis",
     reverse: false,
   },
   {

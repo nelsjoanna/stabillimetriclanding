@@ -48,7 +48,7 @@ export default function Footer() {
               <span className="font-semibold text-lg">StabiliMetric Pro</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              AI-powered cosmetic formulation for the sustainable beauty industry.
+              Predictive cosmetic formulation for the sustainable beauty industry.
             </p>
             <div className="flex items-center gap-3">
               <a

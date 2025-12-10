@@ -10,7 +10,7 @@ const steps = [
   {
     number: "02",
     icon: Cpu,
-    title: "AI Analysis",
+    title: "Smart Analysis",
     description: "Our engine predicts compatibility, stability, and potential issues in seconds.",
   },
   {

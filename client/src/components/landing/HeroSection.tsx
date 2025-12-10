@@ -22,7 +22,7 @@ export default function HeroSection({ onJoinWaitlist }: HeroSectionProps) {
           </div>
           
           <h1 className="text-4xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6" data-testid="text-hero-headline">
-            AI-Powered Formulation
+            Predictive Formulation
             <span className="block text-primary">for Sustainable Beauty</span>
           </h1>
           
