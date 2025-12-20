@@ -13,8 +13,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Star, Zap, HeadphonesIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 
 const earlyAccessPerks = [
   { icon: Star, text: "Founding member pricing" },
@@ -29,6 +27,7 @@ interface WaitlistSectionProps {
 export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
   const { toast } = useToast();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     companyName: "",
@@ -37,38 +36,38 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
     isPilotPartner: false,
   });
 
-  const waitlistMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest("POST", "/api/waitlist", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      setIsSubmitted(true);
-      toast({
-        title: "You're on the list!",
-        description: "We'll be in touch soon with early access details.",
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const form = e.currentTarget;
+      const formDataToSubmit = new FormData(form);
+
+      const response = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(formDataToSubmit as any).toString(),
       });
-    },
-    onError: (error: Error) => {
-      if (error.message.includes("409")) {
+
+      if (response.ok) {
+        setIsSubmitted(true);
         toast({
-          title: "Already signed up",
-          description: "This email is already on our waitlist.",
-          variant: "destructive",
+          title: "You're on the list!",
+          description: "We'll be in touch soon with early access details.",
         });
       } else {
-        toast({
-          title: "Something went wrong",
-          description: "Please try again later.",
-          variant: "destructive",
-        });
+        throw new Error("Form submission failed");
       }
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    waitlistMutation.mutate(formData);
+    } catch (error) {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -117,11 +116,22 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
 
           <Card className="shadow-xl">
             <CardContent className="p-6 lg:p-8">
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form 
+                name="waitlist" 
+                method="POST" 
+                data-netlify="true" 
+                netlify-honeypot="bot-field"
+                onSubmit={handleSubmit} 
+                className="space-y-5"
+              >
+                <input type="hidden" name="form-name" value="waitlist" />
+                <input type="hidden" name="bot-field" />
+                
                 <div className="space-y-2">
                   <Label htmlFor="email">Work Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="you@company.com"
                     required
@@ -135,6 +145,7 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
                   <Label htmlFor="companyName">Company Name</Label>
                   <Input
                     id="companyName"
+                    name="companyName"
                     placeholder="Your company"
                     required
                     value={formData.companyName}
@@ -146,6 +157,7 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="role">Your Role</Label>
+                    <input type="hidden" name="role" value={formData.role} />
                     <Select
                       value={formData.role}
                       onValueChange={(value) => setFormData({ ...formData, role: value })}
@@ -166,6 +178,7 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="companySize">Company Size</Label>
+                    <input type="hidden" name="companySize" value={formData.companySize} />
                     <Select
                       value={formData.companySize}
                       onValueChange={(value) => setFormData({ ...formData, companySize: value })}
@@ -185,6 +198,11 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
                 </div>
 
                 <div className="flex items-start gap-3 pt-2">
+                  <input 
+                    type="hidden" 
+                    name="isPilotPartner" 
+                    value={formData.isPilotPartner ? "on" : ""} 
+                  />
                   <Checkbox
                     id="pilot"
                     checked={formData.isPilotPartner}
@@ -202,10 +220,10 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
                   type="submit"
                   size="lg"
                   className="w-full"
-                  disabled={waitlistMutation.isPending}
+                  disabled={isSubmitting}
                   data-testid="button-submit-waitlist"
                 >
-                  {waitlistMutation.isPending ? "Joining..." : "Get Early Access"}
+                  {isSubmitting ? "Joining..." : "Get Early Access"}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
