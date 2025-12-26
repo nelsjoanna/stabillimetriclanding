@@ -10,6 +10,48 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
+  // Health check endpoint to verify database connectivity
+  app.get("/api/health", async (_req, res) => {
+    try {
+      const isDatabase = process.env.DATABASE_URL ? true : false;
+      const storageType = process.env.DATABASE_URL ? "database" : "memory";
+      
+      // Try to query database if available
+      if (isDatabase) {
+        try {
+          await storage.getAllWaitlistSignups();
+          return res.json({
+            status: "healthy",
+            storage: storageType,
+            database: "connected",
+            timestamp: new Date().toISOString(),
+          });
+        } catch (error) {
+          return res.status(503).json({
+            status: "degraded",
+            storage: storageType,
+            database: "connection_error",
+            error: process.env.NODE_ENV === "production" ? "Database error" : String(error),
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+      
+      return res.json({
+        status: "healthy",
+        storage: storageType,
+        database: "not_configured",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      return res.status(500).json({
+        status: "error",
+        error: "Health check failed",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+  
   app.post("/api/waitlist", waitlistLimiter, async (req, res) => {
     try {
       const parsed = insertWaitlistSignupSchema.parse(req.body);
@@ -22,6 +64,7 @@ export async function registerRoutes(
       }
       
       const signup = await storage.createWaitlistSignup(parsed);
+      console.log(`✅ Waitlist signup created: ${signup.email} (${signup.name})`);
       return res.status(201).json(signup);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -30,7 +73,7 @@ export async function registerRoutes(
           details: error.errors 
         });
       }
-      console.error("Waitlist signup error:", error);
+      console.error("❌ Waitlist signup error:", error);
       return res.status(500).json({ error: "Failed to process signup" });
     }
   });
