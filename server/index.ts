@@ -92,14 +92,24 @@ app.use((req, res, next) => {
     console.warn("⚠️  Waitlist signups will NOT persist (data lost on restart)");
   }
 
-  // Setup session and authentication (requires DATABASE_URL)
-  if (process.env.DATABASE_URL) {
-    setupSession(app);
-    registerAuthRoutes(app);
+  // Setup session and authentication (requires DATABASE_URL and SESSION_SECRET)
+  if (process.env.DATABASE_URL && process.env.SESSION_SECRET) {
+    try {
+      setupSession(app);
+      registerAuthRoutes(app);
+      console.log("✅ Authentication features enabled");
+    } catch (error) {
+      console.warn("⚠️  Authentication setup failed:", error);
+      console.warn("⚠️  Waitlist functionality will still work");
+    }
   } else {
-    console.warn(
-      "⚠️  DATABASE_URL not set - authentication features disabled"
-    );
+    if (!process.env.DATABASE_URL) {
+      console.warn("⚠️  DATABASE_URL not set - authentication features disabled");
+    }
+    if (process.env.DATABASE_URL && !process.env.SESSION_SECRET) {
+      console.warn("⚠️  SESSION_SECRET not set - authentication features disabled");
+      console.warn("⚠️  Waitlist functionality will still work");
+    }
   }
 
   await registerRoutes(httpServer, app);

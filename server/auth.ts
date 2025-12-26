@@ -77,7 +77,7 @@ export function setupSession(app: Express) {
   const sessionSecret = process.env.SESSION_SECRET;
   if (!sessionSecret) {
     throw new Error(
-      "SESSION_SECRET must be set in environment variables for secure sessions"
+      "SESSION_SECRET must be set in environment variables for secure sessions. Authentication features require this."
     );
   }
 
