@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, timestamp, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -34,3 +34,28 @@ export const insertWaitlistSignupSchema = createInsertSchema(waitlistSignups).om
 
 export type InsertWaitlistSignup = z.infer<typeof insertWaitlistSignupSchema>;
 export type WaitlistSignup = typeof waitlistSignups.$inferSelect;
+
+export const ingredients = pgTable("ingredients", {
+  id: varchar("id").primaryKey(),
+  tradeName: text("trade_name").notNull(),
+  inciName: text("inci_name").notNull(),
+  supplier: text("supplier").notNull(),
+  physicalForm: text("physical_form").notNull(),
+  function: text("function").notNull(),
+  chemicalClass: text("chemical_class").notNull(),
+  charge: text("charge").notNull(),
+  solubility: text("solubility").notNull(),
+  phMin: real("ph_min"),
+  phMax: real("ph_max"),
+  hlb: real("hlb"),
+  requiredHlb: real("required_hlb"),
+  iodineValue: real("iodine_value"),
+  oxidationRisk: text("oxidation_risk").notNull(),
+  pka: real("pka"),
+  processTemp: text("process_temp").notNull(),
+  notes: text("notes"),
+});
+
+export const insertIngredientSchema = createInsertSchema(ingredients);
+export type InsertIngredient = z.infer<typeof insertIngredientSchema>;
+export type Ingredient = typeof ingredients.$inferSelect;

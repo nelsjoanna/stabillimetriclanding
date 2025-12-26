@@ -2,6 +2,18 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { setupSecurityHeaders, setupTrustProxy, apiLimiter } from "./security";
+import { setupSession } from "./auth";
+import { registerAuthRoutes } from "./auth-routes";
+import { validateEnv } from "./env";
+
+// Validate environment variables on startup
+try {
+  validateEnv();
+} catch (error) {
+  console.error("❌", error);
+  process.exit(1);
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -12,15 +24,26 @@ declare module "http" {
   }
 }
 
+// Security: Trust proxy for accurate IP addresses (important for Railway)
+setupTrustProxy(app);
+
+// Security: Set security headers
+setupSecurityHeaders(app);
+
+// Security: Apply rate limiting to all API routes
+app.use("/api", apiLimiter);
+
+// Body parsing (must come after security middleware)
 app.use(
   express.json({
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
+    limit: "10mb", // Prevent large payload attacks
   }),
 );
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -60,14 +83,32 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Setup session and authentication (requires DATABASE_URL)
+  if (process.env.DATABASE_URL) {
+    setupSession(app);
+    registerAuthRoutes(app);
+  } else {
+    console.warn(
+      "⚠️  DATABASE_URL not set - authentication features disabled"
+    );
+  }
+
   await registerRoutes(httpServer, app);
 
+  // Secure error handling - don't leak sensitive information
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    
+    // In production, don't expose error details
+    const message =
+      process.env.NODE_ENV === "production"
+        ? "An error occurred"
+        : err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Log full error for debugging (but don't send to client)
+    console.error("Error:", err);
+
+    res.status(status).json({ error: message });
   });
 
   // importantly only setup vite in development and after
