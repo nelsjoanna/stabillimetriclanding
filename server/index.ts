@@ -83,6 +83,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Log storage type on startup
+  if (process.env.DATABASE_URL) {
+    console.log("✅ DATABASE_URL detected - using database storage");
+    console.log("✅ Waitlist signups will be saved to Railway PostgreSQL");
+  } else {
+    console.warn("⚠️  DATABASE_URL not set - using in-memory storage");
+    console.warn("⚠️  Waitlist signups will NOT persist (data lost on restart)");
+  }
+
   // Setup session and authentication (requires DATABASE_URL)
   if (process.env.DATABASE_URL) {
     setupSession(app);

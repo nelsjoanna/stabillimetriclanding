@@ -31,6 +31,8 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
+    name: "",
+    phoneNumber: "",
     companyName: "",
     role: "",
     companySize: "",
@@ -119,6 +121,19 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
             <CardContent className="p-6 lg:p-8">
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    data-testid="input-name"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="email">Work Email</Label>
                   <Input
                     id="email"
@@ -128,6 +143,18 @@ export default function WaitlistSection({ formRef }: WaitlistSectionProps) {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     data-testid="input-email"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    data-testid="input-phone"
                   />
                 </div>
 

@@ -20,6 +20,8 @@ export type User = typeof users.$inferSelect;
 export const waitlistSignups = pgTable("waitlist_signups", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  phoneNumber: text("phone_number"),
   companyName: text("company_name").notNull(),
   role: text("role"),
   companySize: text("company_size"),
