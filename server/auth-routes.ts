@@ -109,9 +109,10 @@ export function registerAuthRoutes(app: Express) {
   // Get current user
   app.get("/api/auth/me", requireAuth, (req: Request, res: Response) => {
     if (req.user) {
+      const user = req.user as User;
       return res.json({
-        id: req.user.id,
-        username: req.user.username,
+        id: user.id,
+        username: user.username,
       });
     }
     return res.status(401).json({ error: "Not authenticated" });

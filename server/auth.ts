@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express } from "express";
+import type { Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
@@ -102,21 +103,6 @@ export function setupSession(app: Express) {
 
   app.use(passport.initialize());
   app.use(passport.session());
-}
-
-import type { Request, Response, NextFunction } from "express";
-
-// Extend Express Request to include Passport methods
-declare global {
-  namespace Express {
-    interface User extends User {}
-    interface Request {
-      user?: User;
-      isAuthenticated(): boolean;
-      login(user: User, callback: (err?: Error) => void): void;
-      logout(callback: (err?: Error) => void): void;
-    }
-  }
 }
 
 // Middleware to check if user is authenticated
