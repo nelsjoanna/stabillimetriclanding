@@ -3,13 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertWaitlistSignupSchema } from "@shared/schema";
 import { z } from "zod";
+import { waitlistLimiter } from "./security";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
-  app.post("/api/waitlist", async (req, res) => {
+  app.post("/api/waitlist", waitlistLimiter, async (req, res) => {
     try {
       const parsed = insertWaitlistSignupSchema.parse(req.body);
       
