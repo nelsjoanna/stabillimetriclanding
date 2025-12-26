@@ -124,6 +124,8 @@ export class MemStorage implements IStorage {
     const waitlistSignup: WaitlistSignup = {
       ...signup,
       id,
+      name: signup.name,
+      phoneNumber: signup.phoneNumber ?? null,
       role: signup.role ?? null,
       companySize: signup.companySize ?? null,
       isPilotPartner: signup.isPilotPartner ?? false,

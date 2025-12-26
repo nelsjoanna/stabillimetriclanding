@@ -14,10 +14,11 @@ export function validateEnv() {
     );
   }
 
-  // SESSION_SECRET is required if DATABASE_URL is set (for authentication)
+  // SESSION_SECRET is required only if authentication features are needed
+  // Waitlist functionality works without it, so we'll just warn
   if (process.env.DATABASE_URL && !process.env.SESSION_SECRET) {
-    errors.push(
-      "SESSION_SECRET must be set when DATABASE_URL is configured (required for secure sessions)"
+    console.warn(
+      "⚠️  SESSION_SECRET not set - authentication features will be disabled. Waitlist functionality will still work."
     );
   }
 
