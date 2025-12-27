@@ -54,10 +54,20 @@ export async function registerRoutes(
   
   app.post("/api/waitlist", waitlistLimiter, async (req, res) => {
     try {
+      // Log incoming request for debugging
+      console.log("📥 Waitlist signup request received:", {
+        email: req.body?.email,
+        name: req.body?.name,
+        companyName: req.body?.companyName,
+        hasPhoneNumber: !!req.body?.phoneNumber,
+        bodyKeys: Object.keys(req.body || {}),
+      });
+
       const parsed = insertWaitlistSignupSchema.parse(req.body);
       
       const existing = await storage.getWaitlistSignupByEmail(parsed.email);
       if (existing) {
+        console.log(`⚠️  Duplicate signup attempt: ${parsed.email}`);
         return res.status(409).json({ 
           error: "This email is already on the waitlist" 
         });
@@ -68,6 +78,10 @@ export async function registerRoutes(
       return res.status(201).json(signup);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("❌ Validation error:", {
+          errors: error.errors,
+          receivedData: req.body,
+        });
         return res.status(400).json({ 
           error: "Invalid request data", 
           details: error.errors 
