@@ -55,17 +55,59 @@ export class DatabaseStorage implements IStorage {
   ): Promise<WaitlistSignup> {
     const db = await getDb();
     try {
-      const [result] = await db
-        .insert(waitlistSignups)
-        .values(signup)
-        .returning();
-      if (!result) {
-        throw new Error("Failed to create waitlist signup");
-      }
+      console.log(`🔄 Attempting to save waitlist signup to database: ${signup.email}`);
+      console.log(`📝 Signup data:`, JSON.stringify(signup, null, 2));
+      
+      // Use a transaction to ensure the insert commits properly
+      const result = await db.transaction(async (tx) => {
+        const [inserted] = await tx
+          .insert(waitlistSignups)
+          .values(signup)
+          .returning();
+        
+        if (!inserted) {
+          throw new Error("Failed to create waitlist signup - no result returned");
+        }
+        
+        // Verify immediately within the same transaction
+        const verify = await tx
+          .select()
+          .from(waitlistSignups)
+          .where(eq(waitlistSignups.email, signup.email))
+          .limit(1);
+        
+        if (verify.length === 0) {
+          throw new Error("CRITICAL: Signup was inserted but cannot be queried back in same transaction!");
+        }
+        
+        console.log(`✅ Transaction verified: Signup exists (ID: ${verify[0].id})`);
+        return inserted;
+      });
+      
       console.log(`✅ Waitlist signup saved to database: ${signup.email}`);
+      console.log(`📊 Saved signup ID: ${result.id}, Email: ${result.email}`);
+      
+      // Verify after transaction commits (using a new connection from pool)
+      const postCommitVerify = await db
+        .select()
+        .from(waitlistSignups)
+        .where(eq(waitlistSignups.email, signup.email))
+        .limit(1);
+      
+      if (postCommitVerify.length === 0) {
+        console.error("❌ CRITICAL: Signup was inserted in transaction but not visible after commit!");
+        console.error("❌ This suggests a database connection or isolation level issue");
+      } else {
+        console.log(`✅ Post-commit verified: Signup exists in database (ID: ${postCommitVerify[0].id})`);
+      }
+      
       return result;
-    } catch (error) {
-      console.error("❌ Error saving waitlist signup to database:", error);
+    } catch (error: any) {
+      console.error("❌ Error saving waitlist signup to database:");
+      console.error("❌ Error message:", error?.message);
+      console.error("❌ Error code:", error?.code);
+      console.error("❌ Error detail:", error?.detail);
+      console.error("❌ Full error:", error);
       throw error;
     }
   }
