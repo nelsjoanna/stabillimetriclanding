@@ -5,9 +5,14 @@ import type { Express } from "express";
 import type { Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { pool } from "./db";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
+
+// Lazy import pool to avoid errors if DATABASE_URL is not set
+async function getPool() {
+  const { pool } = await import("./db");
+  return pool;
+}
 
 // Extend Express Request to include Passport methods
 declare global {
@@ -73,13 +78,15 @@ passport.deserializeUser(async (id: string, done) => {
 });
 
 // Session configuration
-export function setupSession(app: Express) {
+export async function setupSession(app: Express) {
   const sessionSecret = process.env.SESSION_SECRET;
   if (!sessionSecret) {
     throw new Error(
       "SESSION_SECRET must be set in environment variables for secure sessions. Authentication features require this."
     );
   }
+
+  const pool = await getPool();
 
   app.use(
     session({

@@ -95,7 +95,7 @@ app.use((req, res, next) => {
   // Setup session and authentication (requires DATABASE_URL and SESSION_SECRET)
   if (process.env.DATABASE_URL && process.env.SESSION_SECRET) {
     try {
-      setupSession(app);
+      await setupSession(app);
       registerAuthRoutes(app);
       console.log("✅ Authentication features enabled");
     } catch (error) {
